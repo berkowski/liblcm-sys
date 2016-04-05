@@ -6,18 +6,22 @@ extern crate libc;
 
 use self::libc::{c_char, c_int, c_void, c_uint, int64_t, uint32_t};
 
+
 /// Opaque Types
-pub enum Lcm {}
-pub enum LcmSubscription {}
+#[allow(non_camel_case_types)]
+pub enum lcm_t {}
+#[allow(non_camel_case_types)]
+pub enum lcm_subscription_t {}
 
 /// Receive buffers are used by subscription callback functions
 /// to work on received messages.
 #[repr(C)]
-pub struct LcmRecvBuf {
+#[allow(non_camel_case_types)]
+pub struct lcm_recv_buf_t {
     pub data: *const c_void,
     pub data_size: uint32_t,
     pub recv_utime: int64_t,
-    pub lcm: *const Lcm
+    pub lcm: *const lcm_t
 }
 
 /// Subscription handler callback prototype.
@@ -26,7 +30,8 @@ pub struct LcmRecvBuf {
 ///     rbuf:       the message timestamp and payload
 ///     channel:    the channel the message was received on
 ///     user_data:  the user-specified parameter passed to lcm_subscribe()
-pub type LcmMessageHandler = extern "C" fn (rbuf: *const LcmRecvBuf, channel: *const c_char, user_data: *const c_void);
+#[allow(non_camel_case_types)]
+pub type lcm_msg_handler_t = extern "C" fn (rbuf: *const lcm_recv_buf_t, channel: *const c_char, user_data: *const c_void);
 
 extern "C" {
     /// Constructor.
@@ -116,11 +121,11 @@ extern "C" {
     /// 
     /// Returns
     ///     a newly allocated lcm_t instance, or NULL on failure. Free with lcm_destroy() when no longer needed. 
-    pub fn lcm_create(provider: *const c_char) -> *mut Lcm;
+    pub fn lcm_create(provider: *const c_char) -> *mut lcm_t;
 
 
     /// Destroy an Lcm object.
-    pub fn lcm_destroy(lcm: *mut Lcm);
+    pub fn lcm_destroy(lcm: *mut lcm_t);
 
     /// Returns a file descriptor or socket that can be used with select(), poll(), or other event
     /// loops for asynchronous notification of incoming messages.
@@ -132,7 +137,7 @@ extern "C" {
     /// 
     /// Returns
     ///     a file descriptor suitable for use with select, poll, etc. 
-    pub fn lcm_get_fileno(lcm: *const Lcm) -> c_int;
+    pub fn lcm_get_fileno(lcm: *const lcm_t) -> c_int;
 
     /// Wait for and dispatch the next incoming message.
     /// 
@@ -151,7 +156,7 @@ extern "C" {
     /// 
     /// Returns
     ///      0 normally, or -1 when an error has occurred. 
-    pub fn lcm_handle(lcm: *const Lcm) -> c_int;
+    pub fn lcm_handle(lcm: *const lcm_t) -> c_int;
 
     /// Wait for and dispatch the next incoming message, up to a time limit.
     /// 
@@ -172,7 +177,7 @@ extern "C" {
     /// Returns
     ///      >0 if a message was handled, 0 if the function timed out, and <0 if an error
     ///      occured. 
-    pub fn lcm_handle_timeout(lcm: *const Lcm, timeout_millis: c_int) -> c_int;
+    pub fn lcm_handle_timeout(lcm: *const lcm_t, timeout_millis: c_int) -> c_int;
 
     /// Publish a message, specified as a raw byte buffer.
     ///
@@ -188,7 +193,7 @@ extern "C" {
     ///
     /// Returns
     ///     0 on success, -1 on failure. 
-    pub fn lcm_publish(lcm: *const Lcm, channel: *const c_char, data: *const c_void, length: c_uint) -> c_int;
+    pub fn lcm_publish(lcm: *const lcm_t, channel: *const c_char, data: *const c_void, length: c_uint) -> c_int;
 
     /// Subscribe a callback function to a channel, without automatic message decoding.
     ///
@@ -213,7 +218,7 @@ extern "C" {
     ///     a lcm_subscription_t to identify the new subscription, which can be
     ///     passed to lcm_unsubscribe(). The lcm_t instance owns the subscription
     ///     object. 
-    pub fn lcm_subscribe(lcm: *mut Lcm, channel: *const c_char, handler: LcmMessageHandler, user_data: *const c_void) -> *const LcmSubscription;
+    pub fn lcm_subscribe(lcm: *mut lcm_t, channel: *const c_char, handler: lcm_msg_handler_t, user_data: *const c_void) -> *const lcm_subscription_t;
 
     /// Adjusts the maximum number of received messages that can be queued up for a subscription.
     ///
@@ -228,7 +233,7 @@ extern "C" {
     /// Parameters
     ///     handler         the subscription object
     ///     num_messages    the maximum queue size, in messages. The default is 30. 
-    pub fn lcm_subscription_set_queue_capacity(handler: *mut LcmSubscription, num_messages: c_int) -> c_int;
+    pub fn lcm_subscription_set_queue_capacity(handler: *mut lcm_subscription_t, num_messages: c_int) -> c_int;
 
     /// Unsubscribe a message handler.
     ///
@@ -242,6 +247,6 @@ extern "C" {
     ///
     /// Returns
     ///     0 on success, or -1 if handler is not a valid subscription. 
-    pub fn lcm_unsubscribe(lcm: *mut Lcm, handler: *const LcmSubscription) -> c_int;
+    pub fn lcm_unsubscribe(lcm: *mut lcm_t, handler: *const lcm_subscription_t) -> c_int;
 }
 
